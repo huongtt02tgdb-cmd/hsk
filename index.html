@@ -219,9 +219,6 @@ summary{cursor:pointer;margin-top:12px;font-weight:700}
 .dtbl{border-collapse:collapse;font-size:14px}.dtbl td{border:1px solid var(--line);padding:3px 8px;white-space:pre-wrap;vertical-align:top}.dtbl tr:first-child td{font-weight:700;background:color-mix(in srgb,var(--pri) 10%,transparent)}
 .dtxt{white-space:pre-wrap;word-break:break-word;font:inherit;line-height:1.6;margin:0}
 @media(max-width:560px){.tabs .tab{padding-left:10px;padding-right:10px;font-size:.92rem}}
-@media(max-width:560px){.wt col:last-child{width:84px!important}.wt td.ac .spk,.wt td.ac .ghost{margin:0;padding:4px}.wt .gnc,.wt .gnc b{word-break:normal;overflow-wrap:anywhere;font-size:13px}.wt th{font-size:12px}}
-.wt col:nth-child(1),.wt col:nth-child(2){min-width:0}
-.jp,.big,.ctxb{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC","Noto Sans CJK SC","Hiragino Sans GB",sans-serif}
 </style>
 </head>
 <body>
@@ -882,6 +879,7 @@ function gresult(){
 }
 const gui=()=>G.fin?gresult():gpaper();
 function render(){
+  if(!auOn()){$('#app').innerHTML=auGate();return}
   const tw=$('.tw'),st=tw?tw.scrollTop:0;
   $('#app').innerHTML=G?gui():Q?quiz():tab==='gram'?ghome():tab==='stat'?shome():tab==='docs'?dhome():home();
   if(!Q){const t2=$('.tw');if(t2)t2.scrollTop=st}
@@ -997,7 +995,7 @@ setTimeout(stPaint,0);
 /* ---------- đồng bộ chuỗi học giữa các thiết bị (Firebase Realtime Database, REST) ---------- */
 const SYK=STK.replace('study','sync'),SYDB='';
 var SY={url:SYDB,code:'',dev:'',on:false,last:0,err:'',n:1,goalT:0},RM={},syBusy=false,syLastPut='';
-try{const s=JSON.parse(localStorage.getItem(SYK)||'null');if(s){SY.url=s.url||SYDB;SY.code=s.code||'';SY.dev=s.dev||'';SY.on=!!(s.on&&s.url&&s.code&&s.dev);SY.last=s.last||0;SY.goalT=s.goalT||0;RM=s.rm||{}}}catch(e){}
+try{const s=JSON.parse(localStorage.getItem(SYK)||'null');if(s){SY.url=s.url||SYDB;SY.code=s.code||'';SY.dev=s.dev||'';SY.on=false;SY.last=s.last||0;SY.goalT=s.goalT||0;RM=s.rm||{}}}catch(e){}
 const sySave=()=>{try{localStorage.setItem(SYK,JSON.stringify({url:SY.url,code:SY.code,dev:SY.dev,on:SY.on,last:SY.last,goalT:SY.goalT,rm:RM}))}catch(e){}};
 const syRand=n=>{const a='abcdefghjkmnpqrstuvwxyz23456789';let s='';const b=crypto.getRandomValues(new Uint8Array(n));for(const x of b)s+=a[x%a.length];return s};
 const syBase=()=>auOn()?AU.db.replace(/\/+$/,'')+'/users/'+AU.uid+'/'+AUPF:SY.url.replace(/\/+$/,'')+'/s/'+encodeURIComponent(SY.code);
@@ -1065,7 +1063,7 @@ const AUID='https://identitytoolkit.googleapis.com/v1/accounts:',AUST='https://s
 var AU={k:AUKEY,db:AUDB,uid:'',email:'',rt:'',tok:'',exp:0,mg:''};
 try{const s=JSON.parse(localStorage.getItem(AUK)||'null');if(s){AU.k=AUKEY||s.k||'';AU.db=AUDB||s.db||'';AU.uid=s.uid||'';AU.email=s.email||'';AU.rt=s.rt||'';AU.tok=s.tok||'';AU.exp=s.exp||0;AU.mg=s.mg||''}}catch(e){}
 const auSave=()=>{try{localStorage.setItem(AUK,JSON.stringify({k:AU.k,db:AU.db,uid:AU.uid,email:AU.email,rt:AU.rt,tok:AU.tok,exp:AU.exp,mg:AU.mg}))}catch(e){}};
-const auOn=()=>!!(AU.uid&&AU.rt);
+function auOn(){return!!(AU&&AU.uid&&AU.rt)}
 const auMsg=(t,ok)=>{const m=document.getElementById('au-msg');if(m){m.textContent=t;m.style.color=ok?'var(--ok,#2e7d32)':''}return false};
 function auErr(e){
   if(e&&e.name==='AbortError')return'Quá thời gian chờ, thử lại sau.';
@@ -1107,12 +1105,13 @@ async function auSubmit(kind){
   if(!auReadCfg())return;
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.trim()))return auMsg('Email không hợp lệ.');
   if(pw.length<6)return auMsg('Mật khẩu cần ít nhất 6 ký tự.');
+  const p2=document.getElementById('au-pw2');if(kind==='up'&&p2&&p2.value!==pw)return auMsg('Hai mật khẩu chưa giống nhau.');
   AU.busy=true;auMsg(kind==='up'?'Đang tạo tài khoản…':'Đang đăng nhập…',true);
   try{
     const j=await auPost(AUID+(kind==='up'?'signUp':'signInWithPassword')+'?key='+encodeURIComponent(AU.k),{email:em.trim(),password:pw,returnSecureToken:true});
     if(AU.uid&&AU.uid!==j.localId)AU.mg='';
     AU.uid=j.localId;AU.email=j.email||em.trim();AU.rt=j.refreshToken;AU.tok=j.idToken;AU.exp=Date.now()+(+j.expiresIn||3600)*1000;
-    SY.dev=SY.dev||syRand(10);sySave();auSave();syLastPut='';AU.busy=false;render();syNow(true);return true;
+    SY.dev=SY.dev||syRand(10);sySave();auSave();syLastPut='';AU.busy=false;tab='vocab';render();syNow(true);return true;
   }catch(e){AU.busy=false;return auMsg(auErr(e))}
 }
 async function auReset(){
@@ -1159,12 +1158,26 @@ async function auData(){
   AU.mg=AU.uid;auSave();
   if(ch&&!auBusyUI())render();
 }
+var AUM='in';
+function auGate(){
+  const cfg=(AUKEY&&AUDB)?'':`<input id="au-k" placeholder="Firebase Web API Key (AIza…)" value="${esc(AU.k)}"><input id="au-db" placeholder="Địa chỉ database (https://….firebaseio.com)" value="${esc(AU.db)}">`;
+  const nm=(document.title.split(/\s[–-]\s/)[0]||'').trim();
+  const exp=AU.uid&&!AU.rt?'Phiên đăng nhập đã hết hạn, hãy đăng nhập lại.':'';
+  const up=AUM==='up';
+  return`<style>.augt input{display:block;width:100%;box-sizing:border-box;padding:12px 14px;font:inherit;font-size:16px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:inherit;margin:0 0 8px}.augt input:focus{outline:none;border-color:var(--pri)}@media(max-width:560px){.wt col:last-child{width:84px!important}.wt td.ac .spk,.wt td.ac .ghost{margin:0;padding:4px}.wt .gnc,.wt .gnc b{word-break:normal;overflow-wrap:anywhere;font-size:13px}.wt th{font-size:12px}}
+.wt col:nth-child(1),.wt col:nth-child(2){min-width:0}
+.jp,.big,.ctxb{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC","Noto Sans CJK SC","Hiragino Sans GB",sans-serif}
+</style><div class="panel augt" style="max-width:420px;margin:8vh auto 0"><h1 style="margin:0 0 4px">${esc(nm)}</h1><p class="hint" style="margin:0 0 12px">${up?'Tạo tài khoản mới để lưu chuỗi học, từ vựng và tiến độ bài tập.':'Đăng nhập để tiếp tục học và đồng bộ giữa các thiết bị.'}</p>
+<div class="row" style="gap:8px;margin-bottom:10px"><button class="btn${up?'':' sel'}" onclick="AUM='in';render()">Đăng nhập</button><button class="btn${up?' sel':''}" onclick="AUM='up';render()">Đăng ký</button></div>
+${exp?`<p class="hint" style="color:var(--bad,#c62828)">${exp}</p>`:''}${cfg}
+<input id="au-email" type="email" autocomplete="username" placeholder="Email" value="${esc(AU.email)}" style="margin:0 0 8px">
+<input id="au-pw" type="password" autocomplete="${up?'new-password':'current-password'}" placeholder="Mật khẩu (từ 6 ký tự)" style="margin:0 0 8px" onkeydown="if(event.key==='Enter')auSubmit('${up?'up':'in'}')">
+${up?`<input id="au-pw2" type="password" autocomplete="new-password" placeholder="Nhập lại mật khẩu" style="margin:0 0 8px" onkeydown="if(event.key==='Enter')auSubmit('up')">`:''}
+<div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn sel" onclick="auSubmit('${up?'up':'in'}')">${up?'Tạo tài khoản':'Đăng nhập'}</button>${up?'':'<button class="btn" onclick="auReset()">Quên mật khẩu</button>'}</div>
+<p class="hint" id="au-msg" style="margin:8px 0 0"></p></div>`;
+}
 function auPanel(){
-  const cfg=(AUKEY&&AUDB)?'':`<input id="au-k" placeholder="Firebase Web API Key (AIza…)" value="${esc(AU.k)}" style="margin:0 0 8px"><input id="au-db" placeholder="Địa chỉ database (https://….firebaseio.com)" value="${esc(AU.db||SY.url)}" style="margin:0 0 8px">`;
-  if(auOn())return`<div class="panel stcard stwide"><h2>Tài khoản</h2><p style="margin:0 0 6px">👤 <b>${esc(AU.email)}</b></p><p class="hint" id="sy-st" style="margin:0 0 8px">${syStatus()}</p><div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn" onclick="syNow(true)">⟳ Đồng bộ ngay</button><button class="btn" onclick="auOut()">Đăng xuất</button></div><p class="hint" style="margin:8px 0 0">Đang lưu theo tài khoản: chuỗi học và thời gian học, từ vựng đã chọn, tiến độ bài tập ngữ pháp. Đăng nhập cùng email trên thiết bị khác để học tiếp.</p></div>`;
-  const exp=AU.uid&&!AU.rt?'Phiên đăng nhập đã hết hạn, hãy đăng nhập lại. ':'';
-  const old=`<div class="stwide" style="margin-bottom:12px"><details${SY.on?' open':''}><summary class="hint" style="cursor:pointer;padding:6px 0">Cách khác: dùng mã đồng bộ (không cần tài khoản)</summary>${syPanelOld()}</details></div>`;
-  return`<div class="panel stcard stwide"><h2>Đăng nhập để lưu tiến độ</h2><p class="hint" style="margin:0 0 8px">${exp}Lưu chuỗi học, từ vựng đã chọn và tiến độ bài tập lên tài khoản, dùng được trên mọi thiết bị.</p>${cfg}<input id="au-email" type="email" autocomplete="username" placeholder="Email" value="${esc(AU.email)}" style="margin:0 0 8px"><input id="au-pw" type="password" autocomplete="current-password" placeholder="Mật khẩu (từ 6 ký tự)" style="margin:0 0 8px" onkeydown="if(event.key==='Enter')auSubmit('in')"><div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn sel" onclick="auSubmit('in')">Đăng nhập</button><button class="btn" onclick="auSubmit('up')">Tạo tài khoản</button><button class="btn" onclick="auReset()">Quên mật khẩu</button></div><p class="hint" id="au-msg" style="margin:8px 0 0"></p></div>${old}`;
+  return`<div class="panel stcard stwide"><h2>Tài khoản</h2><p style="margin:0 0 6px">👤 <b>${esc(AU.email)}</b></p><p class="hint" id="sy-st" style="margin:0 0 8px">${syStatus()}</p><div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn" onclick="syNow(true)">⟳ Đồng bộ ngay</button><button class="btn" onclick="auOut()">Đăng xuất</button></div><p class="hint" style="margin:8px 0 0">Đang lưu theo tài khoản: chuỗi học và thời gian học, từ vựng đã chọn, tiến độ bài tập ngữ pháp. Đăng nhập cùng email trên thiết bị khác để học tiếp.</p></div>`;
 }
 function syPanel(){return auPanel()}
 
@@ -1172,11 +1185,6 @@ setTimeout(()=>syNow(),1500);
 setInterval(()=>{if(document.visibilityState==='visible')syNow()},60000);
 addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')syPush();else syNow()});
 addEventListener('pagehide',syPush);addEventListener('online',()=>syNow());
-setTimeout(()=>{try{const m=/[#&]sync=([^&]+)/.exec(location.hash);if(!m)return;
-  const o=JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')))));
-  history.replaceState(null,'',location.pathname+location.search);
-  if(o&&o.u&&o.c&&!(SY.on&&SY.code===String(o.c).toLowerCase())&&confirm('Kết nối thiết bị này với mã đồng bộ "'+o.c+'"?\nChuỗi học và thời gian học sẽ được cộng dồn giữa các thiết bị.')){setTab('stat');syEnable(o.u,o.c)}
-}catch(e){}},800);
 
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 /* ---------- tài liệu: xem PDF, Word, Excel... ngay trên trang ---------- */

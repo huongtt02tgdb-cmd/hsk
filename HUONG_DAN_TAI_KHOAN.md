@@ -17,23 +17,21 @@ Realtime Database → tab **Rules** → dán rồi **Publish**:
   "rules": {
     "users": {
       "$uid": { ".read": "auth.uid === $uid", ".write": "auth.uid === $uid" }
-    },
-    "s": { "$code": { ".read": true, ".write": true } }
+    }
   }
 }
 ```
-Mỗi người chỉ đọc/ghi được dữ liệu của chính mình. Dòng `"s"` chỉ cần nếu còn dùng "mã đồng bộ" cũ; bỏ đi nếu chỉ dùng tài khoản.
-
+Mỗi người chỉ đọc/ghi được dữ liệu của chính mình. 
 ## 3. Gắn cấu hình vào app (làm một lần cho mỗi app)
 Mở `index.html` bằng Notepad, bấm Ctrl+F tìm `const AUKEY=''` và điền:
 ```
 const AUKEY='AIza...API key của bạn...',AUDB='https://ten-du-an-default-rtdb.firebaseio.com'
 ```
 Lưu, commit và push lên GitHub như bình thường. Người dùng chỉ thấy ô Email và Mật khẩu.
-(Nếu chưa điền, app hiện thêm hai ô để nhập API key và địa chỉ database ngay trên máy, chỉ dùng để thử.)
+Nếu chưa điền, màn hình đăng nhập hiện thêm hai ô để nhập API key và địa chỉ database, chỉ dùng để thử. Chưa cấu hình Firebase thì chưa vào được app.
 
 ## 4. Dùng
-Tab **Chuỗi học** → nhập email, mật khẩu → **Tạo tài khoản** (lần đầu) hoặc **Đăng nhập**.
+Mở trang là thấy màn hình **Đăng nhập / Đăng ký**. Đăng ký: nhập email, mật khẩu hai lần; nếu email đã có tài khoản thì báo "Email này đã có tài khoản", chưa có thì tạo mới. Đã đăng nhập một lần thì lần sau vào thẳng app, kể cả khi không có mạng. Nút **Đăng xuất** nằm ở tab **Chuỗi học**.
 - Thiết bị khác: đăng nhập cùng email.
 - Quên mật khẩu: nhập email rồi bấm **Quên mật khẩu**, Firebase gửi thư đặt lại.
 - Đăng nhập lần đầu: tiến độ ngữ pháp trên máy được gộp với tài khoản (lấy điểm cao hơn).
