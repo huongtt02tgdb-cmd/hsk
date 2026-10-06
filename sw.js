@@ -1,4 +1,4 @@
-const BUILD='202610051349';
+const BUILD='202610060847';
 const SHELL='hsk-shell-'+BUILD, AUDIO='hsk-audio';
 const FILES=['./','index.html','manifest.json','icons/icon-192.png','icons/icon-512.png','icons/icon-180.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(SHELL).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()))});
