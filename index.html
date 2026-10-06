@@ -208,6 +208,17 @@ summary{cursor:pointer;margin-top:12px;font-weight:700}
 .stul{margin:10px 0 0;padding-left:20px;line-height:1.55}.stul li{margin-bottom:4px}
 .btn.sel{background:var(--pri);border-color:var(--pri);color:var(--pri-ink)}
 @media(max-width:560px){.stlab small{font-size:.6rem;min-width:0;overflow:hidden}.stlab small:nth-child(even){visibility:hidden}.stcard{min-width:0}.stgrid{min-width:0}}
+.dgrid{display:grid;gap:10px;margin-bottom:12px}.dgh{margin:14px 0 8px;font-size:1rem}
+.dit{display:flex;gap:12px;align-items:center;padding:12px 14px;border:2px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
+.dit:hover{border-color:var(--pri)}.dit .di{font-size:26px}.dit b{display:block;word-break:break-word}.dit small{color:var(--mute)}
+.dvbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5;margin-bottom:6px}
+.dvt{font-weight:800;flex:1;min-width:120px;word-break:break-word}
+.dvb{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:8px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.dpg{margin:0 auto 10px;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.2)}.dpg canvas{display:block;width:100%;height:100%}
+.ddoc{line-height:1.65;font-size:16px;word-break:break-word}.ddoc img{max-width:100%;height:auto}.ddoc table{border-collapse:collapse;margin:8px 0}.ddoc td,.ddoc th{border:1px solid var(--line);padding:4px 8px}
+.dtbl{border-collapse:collapse;font-size:14px}.dtbl td{border:1px solid var(--line);padding:3px 8px;white-space:pre-wrap;vertical-align:top}.dtbl tr:first-child td{font-weight:700;background:color-mix(in srgb,var(--pri) 10%,transparent)}
+.dtxt{white-space:pre-wrap;word-break:break-word;font:inherit;line-height:1.6;margin:0}
+@media(max-width:560px){.tabs .tab{padding-left:10px;padding-right:10px;font-size:.92rem}}
 @media(max-width:560px){.wt col:last-child{width:84px!important}.wt td.ac .spk,.wt td.ac .ghost{margin:0;padding:4px}.wt .gnc,.wt .gnc b{word-break:normal;overflow-wrap:anywhere;font-size:13px}.wt th{font-size:12px}}
 .wt col:nth-child(1),.wt col:nth-child(2){min-width:0}
 .jp,.big,.ctxb{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC","Noto Sans CJK SC","Hiragino Sans GB",sans-serif}
@@ -741,7 +752,7 @@ function gClearX(){if(!GX.questions.length||!confirm('Xóa các bài tập đã 
   gcfg.ls=new Set([...gcfg.ls].filter(l=>GD.some(q=>q.l===l)));gcfg.pt.clear();gmsg='Đã xóa các bài tập nhập thêm.';render();
 }
 let tab='vocab',G=null,gcfg={ls:new Set([1]),pt:new Set(),sk:new Set(['nghe','doc','viet','hieu']),n:'20'};
-const tabs=t=>`<div class="top"><h1>Hànyǔ<small>Ôn HSK 1</small></h1><div class="tabs">${stChip()}<button class="tab ${t==='vocab'?'on':''}" onclick="setTab('vocab')">Từ vựng</button><button class="tab ${t==='gram'?'on':''}" onclick="setTab('gram')">Ngữ pháp</button><button class="tab ${t==='stat'?'on':''}" onclick="setTab('stat')">Chuỗi học</button></div></div>`;
+const tabs=t=>`<div class="top"><h1>Hànyǔ<small>Ôn HSK 1</small></h1><div class="tabs">${stChip()}<button class="tab ${t==='vocab'?'on':''}" onclick="setTab('vocab')">Từ vựng</button><button class="tab ${t==='gram'?'on':''}" onclick="setTab('gram')">Ngữ pháp</button><button class="tab ${t==='stat'?'on':''}" onclick="setTab('stat')">Chuỗi học</button><button class="tab ${t==='docs'?'on':''}" onclick="setTab('docs')">Tài liệu</button></div></div>`;
 const setTab=t=>{tab=t;render()};
 const gLessons=()=>[...new Set(GD.map(q=>q.l))].sort((a,b)=>a-b);
 const gPool=()=>GD.filter(q=>gcfg.ls.has(q.l)&&(!gcfg.pt.size||gcfg.pt.has(q.l+'.'+q.g))&&gcfg.sk.has(q.s));
@@ -872,7 +883,7 @@ function gresult(){
 const gui=()=>G.fin?gresult():gpaper();
 function render(){
   const tw=$('.tw'),st=tw?tw.scrollTop:0;
-  $('#app').innerHTML=G?gui():Q?quiz():tab==='gram'?ghome():tab==='stat'?shome():home();
+  $('#app').innerHTML=G?gui():Q?quiz():tab==='gram'?ghome():tab==='stat'?shome():tab==='docs'?dhome():home();
   if(!Q){const t2=$('.tw');if(t2)t2.scrollTop=st}
   if(Q&&Q.mode!=='test'&&(cm()==='ty'||cm()==='ls')&&!Q.state&&Q.i<Q.list.length){
     setTimeout(()=>$('#ans')?.focus());
@@ -1057,6 +1068,134 @@ setTimeout(()=>{try{const m=/[#&]sync=([^&]+)/.exec(location.hash);if(!m)return;
 }catch(e){}},800);
 
 if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+/* ---------- tài liệu: xem PDF, Word, Excel... ngay trên trang ---------- */
+const DLK=STK.replace('study','docs');
+let D={list:null,err:'',loading:false,q:'',view:null,zoom:1,pg:1,np:0,sheet:0,pdf:null,obs:null,tok:0};
+try{D.list=JSON.parse(localStorage.getItem(DLK)||'null')}catch(e){}
+const DEXT={pdf:'PDF',docx:'Word',doc:'Word',xlsx:'Excel',xls:'Excel',csv:'Bảng CSV',ods:'Bảng',txt:'Văn bản',md:'Văn bản',json:'Văn bản',pptx:'PowerPoint',ppt:'PowerPoint',mp3:'Âm thanh',wav:'Âm thanh',m4a:'Âm thanh',mp4:'Video',webm:'Video'};
+const dext=n=>String(n).split('.').pop().toLowerCase();
+const disimg=e=>/^(png|jpe?g|gif|webp|svg|bmp)$/.test(e);
+const dico=e=>({pdf:'📕',docx:'📘',doc:'📘',xlsx:'📗',xls:'📗',csv:'📗',ods:'📗',pptx:'📙',ppt:'📙',txt:'📄',md:'📄',json:'📄',mp3:'🎧',wav:'🎧',m4a:'🎧',mp4:'🎬',webm:'🎬'})[e]||(disimg(e)?'🖼️':'📎');
+const dsize=b=>b>=1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';
+const dUrl=f=>'docs/'+f.split('/').map(encodeURIComponent).join('/');
+const dScripts={};
+const dLoadJS=s=>dScripts[s]||(dScripts[s]=new Promise((ok,no)=>{const e=document.createElement('script');e.src=s;e.onload=ok;e.onerror=()=>{delete dScripts[s];no(new Error('Không tải được thư viện xem tài liệu (cần mạng ở lần đầu).'))};document.head.appendChild(e)}));
+async function dGitHubList(){
+  const m=/^([^.]+)\.github\.io$/.exec(location.hostname),rp=location.pathname.split('/')[1];
+  if(!m||!rp)throw new Error('no github');
+  const out=[];
+  const walk=async(sub,depth)=>{
+    const r=await fetch(`https://api.github.com/repos/${m[1]}/${rp}/contents/docs${sub?'/'+sub:''}`);
+    if(!r.ok)throw new Error('api '+r.status);
+    for(const x of await r.json()){
+      if(x.type==='dir'&&depth<2)await walk((sub?sub+'/':'')+x.name,depth+1);
+      else if(x.type==='file'&&!/^(index\.json|readme\.md|\.gitkeep|\.ds_store|thumbs\.db)$/i.test(x.name))out.push({f:(sub?sub+'/':'')+x.name,s:x.size||0});
+    }
+  };
+  await walk('',0);return out;
+}
+async function dLoad(){
+  D.loading=true;D.err='';let list=null;
+  try{const r=await fetch('docs/index.json',{cache:'no-cache'});if(r.ok){const j=await r.json();list=(Array.isArray(j)?j:(j.files||[])).map(x=>typeof x==='string'?{f:x}:x).filter(x=>x&&x.f)}}catch(e){}
+  if(!list){try{list=await dGitHubList()}catch(e){D.err=D.list&&D.list.length?'Không cập nhật được danh sách, đang hiện bản đã lưu trên máy.':'Chưa có tài liệu nào. Bỏ file vào thư mục "docs" của trang web rồi đẩy lên GitHub.'}}
+  if(list){D.list=list.map(x=>({f:x.f,n:x.n||x.f.split('/').pop().replace(/\.[^.]+$/,''),s:x.s||0}));try{localStorage.setItem(DLK,JSON.stringify(D.list))}catch(e){}}
+  D.loading=false;if(tab==='docs'&&!D.view)render();
+}
+function dListHTML(){
+  if(D.list===null)return'<p class="hint">Đang tải danh sách…</p>';
+  const q=D.q.trim().toLowerCase(),idx=new Map(D.list.map((x,i)=>[x,i]));
+  const L=D.list.filter(x=>!q||x.n.toLowerCase().includes(q)||x.f.toLowerCase().includes(q));
+  if(!L.length)return`<p class="hint">${D.list.length?'Không có tài liệu khớp từ khóa.':esc(D.err||'Chưa có tài liệu nào.')}</p>`;
+  const g={};L.forEach(x=>{const c=x.f.includes('/')?x.f.split('/').slice(0,-1).join(' / '):'';(g[c]=g[c]||[]).push(x)});
+  return(D.err?`<p class="hint">${esc(D.err)}</p>`:'')+Object.keys(g).sort((a,b)=>a.localeCompare(b,'vi')).map(c=>`${c?`<h3 class="dgh">📁 ${esc(c)}</h3>`:''}<div class="dgrid">${g[c].sort((a,b)=>a.n.localeCompare(b.n,'vi',{numeric:true})).map(x=>{const e=dext(x.f);return`<button class="dit" onclick="dOpen(${idx.get(x)})"><span class="di">${dico(e)}</span><span><b>${esc(x.n)}</b><small>${DEXT[e]||('.'+e)}${x.s?' · '+dsize(x.s):''}</small></span></button>`}).join('')}</div>`).join('');
+}
+function dFilter(v){D.q=v;const e=document.getElementById('d-list');if(e)e.innerHTML=dListHTML()}
+function dhome(){
+  if(D.view)return dview();
+  if(D.list===null&&!D.loading)setTimeout(dLoad,0);
+  return`${tabs('docs')}<div class="panel"><h2>Tài liệu</h2>
+<input type="search" id="d-q" placeholder="Tìm tài liệu…" value="${esc(D.q)}" oninput="dFilter(this.value)" aria-label="Tìm tài liệu" style="margin:0 0 10px">
+<div class="row" style="flex-wrap:wrap;gap:8px"><label class="btn sel" style="cursor:pointer">📂 Mở file từ máy<input type="file" accept=".pdf,.docx,.xlsx,.xls,.csv,.ods,.txt,.md,.json,image/*,audio/*,video/*,.pptx,.doc,.ppt" style="display:none" onchange="dOpenLocal(this)"></label><button class="btn" onclick="D.list=null;dLoad();render()">⟳ Làm mới</button><button class="btn" onclick="dPrefetch()">⬇ Tải để đọc offline</button></div>
+<p class="hint" id="d-st" style="margin:8px 0 0">Xem trực tiếp PDF, Word (.docx), Excel, CSV, văn bản, ảnh, âm thanh, video. File mở từ máy chỉ xem trên trình duyệt của bạn, không bị tải lên đâu cả.</p></div>
+<div class="panel" id="d-list">${dListHTML()}</div>`;
+}
+function dOpen(i){const x=D.list[i];if(!x)return;D.view={name:x.n,ext:dext(x.f),url:dUrl(x.f),file:x.f};D.zoom=1;D.sheet=0;D.pdf=null;render();window.scrollTo(0,0)}
+function dOpenLocal(inp){const f=inp.files&&inp.files[0];if(!f)return;D.view={name:f.name,ext:dext(f.name),blob:f};D.zoom=1;D.sheet=0;D.pdf=null;inp.value='';render();window.scrollTo(0,0)}
+function dClose(){D.view=null;D.pdf=null;D.tok++;if(D.obs){D.obs.disconnect();D.obs=null}render()}
+function dview(){
+  const v=D.view;
+  setTimeout(dPaint,0);
+  return`${tabs('docs')}<div class="dvbar"><button class="btn" onclick="dClose()">← Danh sách</button><span class="dvt">${esc(v.name)}</span>${v.ext==='pdf'?`<button class="btn" onclick="dZoom(-.2)" aria-label="Thu nhỏ">−</button><button class="btn" onclick="dZoom(.2)" aria-label="Phóng to">+</button><span id="d-pg" class="hint" style="margin:0"></span>`:''}<button class="btn" onclick="dDownload()">⬇ Tải về</button></div><div class="dvb" id="dv-body"><p class="hint">Đang mở…</p></div>`;
+}
+async function dBuf(v){if(v.blob)return v.blob.arrayBuffer();const r=await fetch(v.url);if(!r.ok)throw new Error('Không mở được file (mã '+r.status+').');return r.arrayBuffer()}
+async function dPaint(){
+  const v=D.view,b=document.getElementById('dv-body');if(!v||!b)return;
+  try{
+    const e=v.ext;
+    if(e==='pdf')await dPdf(v,b);
+    else if(e==='docx'){await dLoadJS('lib/mammoth.browser.min.js');const r=await mammoth.convertToHtml({arrayBuffer:await dBuf(v)});if(D.view!==v)return;b.innerHTML=`<div class="ddoc">${r.value||'<p class="hint">Tài liệu trống.</p>'}</div>`}
+    else if(e==='xlsx'||e==='xls'||e==='ods'){const wb=XLSX.read(await dBuf(v),{type:'array'});if(D.view===v)dSheets(wb,b)}
+    else if(e==='csv'){const wb=XLSX.read(new TextDecoder().decode(await dBuf(v)),{type:'string'});if(D.view===v)dSheets(wb,b)}
+    else if(e==='txt'||e==='md'||e==='json'){const t=new TextDecoder().decode(await dBuf(v));if(D.view===v)b.innerHTML=`<pre class="dtxt">${esc(t)}</pre>`}
+    else{
+      const src=v.blob?URL.createObjectURL(v.blob):v.url;
+      if(disimg(e))b.innerHTML=`<img src="${esc(src)}" alt="${esc(v.name)}" style="max-width:100%;height:auto;display:block;margin:0 auto">`;
+      else if(/^(mp3|wav|m4a)$/.test(e))b.innerHTML=`<audio controls src="${esc(src)}" style="width:100%"></audio>`;
+      else if(/^(mp4|webm)$/.test(e))b.innerHTML=`<video controls src="${esc(src)}" style="width:100%;max-height:75vh"></video>`;
+      else b.innerHTML=`<p>Trình duyệt chưa xem trực tiếp được định dạng <b>.${esc(e)}</b> (ví dụ PowerPoint hoặc Word cũ .doc). Bấm <b>⬇ Tải về</b> để mở bằng ứng dụng trên máy, hoặc đổi file sang PDF rồi tải lên.</p>`;
+    }
+  }catch(err){if(D.view===v)b.innerHTML=`<p class="hint">Không mở được: ${esc(err.message||err)}</p>`}
+}
+function dSheets(wb,b){
+  const names=wb.SheetNames;
+  const draw=i=>{
+    D.sheet=i;const rows=XLSX.utils.sheet_to_json(wb.Sheets[names[i]],{header:1,defval:'',raw:false});
+    const cut=rows.length>1500,R=rows.slice(0,1500),w=Math.min(60,Math.max(1,...R.map(r=>r.length)));
+    b.innerHTML=`${names.length>1?`<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">${names.map((n,j)=>`<button class="btn ${j===i?'sel':''}" data-i="${j}">${esc(n)}</button>`).join('')}</div>`:''}<div style="overflow:auto"><table class="dtbl">${R.map(r=>`<tr>${Array.from({length:w},(_,k)=>`<td>${esc(r[k]??'')}</td>`).join('')}</tr>`).join('')}</table></div>${cut?'<p class="hint">Chỉ hiện 1500 dòng đầu.</p>':''}`;
+    b.querySelectorAll('button[data-i]').forEach(x=>x.onclick=()=>draw(+x.dataset.i));
+  };
+  draw(D.sheet<names.length?D.sheet:0);
+}
+async function dPdf(v,b){
+  await dLoadJS('lib/pdf.min.js');pdfjsLib.GlobalWorkerOptions.workerSrc='lib/pdf.worker.min.js';
+  const doc=await pdfjsLib.getDocument({data:new Uint8Array(await dBuf(v))}).promise;
+  if(D.view!==v)return;D.pdf=doc;D.np=doc.numPages;D.pg=1;await dPdfLayout(b);
+}
+async function dPdfLayout(b){
+  b=b||document.getElementById('dv-body');const doc=D.pdf;if(!doc||!b)return;
+  if(D.obs)D.obs.disconnect();
+  const token=++D.tok,p1=await doc.getPage(1),v1=p1.getViewport({scale:1}),W=Math.max(200,b.clientWidth-16)*D.zoom,sc=W/v1.width;
+  b.innerHTML='';const pages=[];
+  for(let i=1;i<=doc.numPages;i++){const d=document.createElement('div');d.className='dpg';d.dataset.p=i;d.style.width=W+'px';d.style.height=Math.round(v1.height*sc)+'px';b.appendChild(d);pages.push(d)}
+  const draw=async d=>{
+    if(d.dataset.done)return;d.dataset.done=1;
+    const p=await doc.getPage(+d.dataset.p),vp=p.getViewport({scale:W/p.getViewport({scale:1}).width}),dpr=Math.min(2,window.devicePixelRatio||1),c=document.createElement('canvas');
+    c.width=Math.floor(vp.width*dpr);c.height=Math.floor(vp.height*dpr);d.style.height=Math.round(vp.height)+'px';
+    await p.render({canvasContext:c.getContext('2d'),viewport:p.getViewport({scale:vp.scale*dpr})}).promise;
+    if(D.tok===token)d.appendChild(c);
+  };
+  D.obs=new IntersectionObserver(es=>{
+    es.forEach(e=>{if(e.isIntersecting)draw(e.target).catch(()=>{})});
+    const vis=es.filter(e=>e.isIntersecting).sort((x,y)=>y.intersectionRatio-x.intersectionRatio)[0];
+    if(vis){D.pg=+vis.target.dataset.p;dPg()}
+  },{rootMargin:'700px 0px',threshold:[0,.5]});
+  pages.forEach(d=>D.obs.observe(d));dPg();
+}
+function dPg(){const e=document.getElementById('d-pg');if(e)e.textContent=`Trang ${D.pg}/${D.np}`}
+function dZoom(dz){D.zoom=Math.max(.6,Math.min(3,Math.round((D.zoom+dz)*10)/10));dPdfLayout()}
+function dDownload(){
+  const v=D.view;if(!v)return;const a=document.createElement('a');
+  a.href=v.blob?URL.createObjectURL(v.blob):v.url;a.download=v.file?v.file.split('/').pop():v.name;
+  document.body.appendChild(a);a.click();a.remove();
+}
+async function dPrefetch(){
+  const st=document.getElementById('d-st'),L=D.list||[];let n=0,bad=0;
+  if(!L.length){if(st)st.textContent='Chưa có tài liệu nào để tải.';return}
+  for(const u of['lib/pdf.min.js','lib/pdf.worker.min.js','lib/mammoth.browser.min.js'])try{await fetch(u)}catch(e){}
+  for(const x of L){try{const r=await fetch(dUrl(x.f));if(!r.ok)throw 0;await r.arrayBuffer()}catch(e){bad++}n++;if(st)st.textContent=`Đã tải ${n}/${L.length}…`}
+  if(st)st.textContent=bad?`Xong, ${bad} file chưa tải được.`:'Xong. Đã lưu để đọc khi không có mạng.';
+}
+
 render();
 </script>
 </body>
