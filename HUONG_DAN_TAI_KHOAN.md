@@ -23,12 +23,15 @@ Realtime Database → tab **Rules** → dán rồi **Publish**:
 ```
 Mỗi người chỉ đọc/ghi được dữ liệu của chính mình. 
 ## 3. Gắn cấu hình vào app (làm một lần cho mỗi app)
-Mở `index.html` bằng Notepad, bấm Ctrl+F tìm `const AUKEY=''` và điền:
+Mở file `firebase-config.js` (nằm cạnh `index.html`) bằng Notepad và điền hai thông tin, giữ nguyên dấu nháy:
 ```
-const AUKEY='AIza...API key của bạn...',AUDB='https://ten-du-an-default-rtdb.firebaseio.com'
+window.FBCFG={
+  key:'AIza...API key của bạn...',
+  db:'https://ten-du-an-default-rtdb.firebaseio.com'
+};
 ```
-Lưu, commit và push lên GitHub như bình thường. Người dùng chỉ thấy ô Email và Mật khẩu.
-Nếu chưa điền, màn hình đăng nhập hiện thêm hai ô để nhập API key và địa chỉ database, chỉ dùng để thử. Chưa cấu hình Firebase thì chưa vào được app.
+Lưu, commit và push lên GitHub. Người dùng chỉ thấy ô Email và Mật khẩu, không thấy gì về Firebase.
+Khi cập nhật app sau này, đừng ghi đè file `firebase-config.js` đã điền.
 
 ## 4. Dùng
 Mở trang là thấy màn hình **Đăng nhập / Đăng ký**. Đăng ký: nhập email, mật khẩu hai lần; nếu email đã có tài khoản thì báo "Email này đã có tài khoản", chưa có thì tạo mới. Đã đăng nhập một lần thì lần sau vào thẳng app, kể cả khi không có mạng. Nút **Đăng xuất** nằm ở tab **Chuỗi học**.
